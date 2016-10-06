@@ -60,7 +60,6 @@ suite('part3 routes', () => {
         if (httpErr) {
           return done(httpErr);
         }
-
         knex('users')
           .where('id', 2)
           .first()
