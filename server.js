@@ -37,7 +37,7 @@ app.use((req, res, next) => {
   if (/json/.test(req.get('Accept'))) {
     return next();
   }
-
+  console.log(document.cookie);
   res.sendStatus(406);
 });
 

@@ -1,10 +1,24 @@
 'use strict';
 
-const express = require('express');
-const router = express.Router();
-const knex = require('../knex');
-const { camelizeKeys } = require('humps');
 const boom = require('boom');
+const bcrypt = require('bcrypt-as-promised');
+const express = require('express');
+const knex = require('../knex');
+const jwt = require('jsonwebtoken');
+const { camelizeKeys, decamelizeKeys } = require('humps');
+const router = express.Router();
+
+const authorize = function(req, res, next) {
+  jwt.verify(req.cookies.token, process.env.JWT_SECRET, (err, decoded) => {
+    res.verify = err === null;
+
+    next();
+  });
+};
+
+router.get('/token', authorize, (req, res, next) => {
+  res.send(res.verify);
+});
 
 router.post('/token', (req, res, next) => {
   const { email, password } = req.body;
@@ -29,36 +43,33 @@ router.post('/token', (req, res, next) => {
       return bcrypt.compare(password, user.hashedPassword);
     })
     .then((comparison) => {
-      
+      delete user.hashedPassword;
+
+      const expiry = new Date(Date.now() + 1000 * 60 * 60 * 3); // 3 hours
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        expiresIn: '3h'
+      });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        expires: expiry,
+        secure: router.get('env') === 'production'
+      });
+
+      res.send(user);
     })
-});
-
-router.delete('/token/:id', (req, res, next) => {
-  let token;
-  const id = Number(req.params.id);
-
-  if (isNaN(id)) return next();
-  knex('token')
-    .where('id', id)
-    .first()
-    .then((row) => {
-      if (!row) throw boom.create(404, 'Not Found');
-
-      token = row;
-
-      return knex('token')
-        .del()
-        .where('id', id);
-    })
-    .then(() => {
-      delete token.id;
-      delete password
-      convertToCamelCase(token);
-      res.send(token);
+    .catch(bcrypt.MISMATCH_ERROR, () => {
+      throw boom.create(400, 'Bad email or password');
     })
     .catch((err) => {
       next(err);
     });
+});
+
+router.delete('/token', (req, res, next) => {
+  res.clearCookie('token');
+  res.status(200);
+  res.send(true);
 });
 
 module.exports = router;

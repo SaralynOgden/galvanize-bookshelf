@@ -1,3 +1,4 @@
+
 'use strict';
 
 const express = require('express');
@@ -90,8 +91,8 @@ router.patch('/books/:id', (req, res, next) => {
     })
     .then((books) => {
       bookUpdate.id = req.params.id;
-      convertToCamelCase(bookUpdate);
-      res.send(bookUpdate);
+      const jsonBookUpdate = camelizeKeys(bookUpdate);
+      res.send(jsonBookUpdate);
     })
     .catch((err) => {
       next(err);
@@ -117,8 +118,8 @@ router.delete('/books/:id', (req, res, next) => {
     })
     .then(() => {
       delete book.id;
-      convertToCamelCase(book);
-      res.send(book);
+      const jsonBook = camelizeKeys(book);
+      res.send(jsonBook);
     })
     .catch((err) => {
       next(err);

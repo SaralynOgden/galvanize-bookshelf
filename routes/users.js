@@ -29,7 +29,7 @@ router.post('/users', (req, res, next) => {
     .then((hashedPassword) => {
       newUser = { firstName, lastName, email, hashedPassword };
 
-      return knex('users').insert(decamelizeKeys(newUser), '*')
+      return knex('users').insert(decamelizeKeys(newUser), '*');
     })
     .then((users) => {
       newUser.id = users[0].id;
