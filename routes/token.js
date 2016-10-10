@@ -8,9 +8,10 @@ const jwt = require('jsonwebtoken');
 const { camelizeKeys } = require('humps');
 const router = express.Router(); // eslint-disable-line new-cap
 
-const authorize = function(req, res) {
+const authorize = function(req, res, next) {
   jwt.verify(req.cookies.token, process.env.JWT_SECRET, (err) => {
     res.verify = err === null;
+    next();
   });
 };
 
