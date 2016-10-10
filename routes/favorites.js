@@ -1,13 +1,11 @@
 'use strict';
 
 const boom = require('boom');
-const bcrypt = require('bcrypt-as-promised');
 const express = require('express');
 const knex = require('../knex');
 const { camelizeKeys, decamelizeKeys } = require('humps');
 const jwt = require('jsonwebtoken');
-
-const router = express.Router();
+const router = express.Router(); // eslint-disable-line new-cap
 
 const authorize = function(req, res, next) {
   jwt.verify(req.cookies.token, process.env.JWT_SECRET, (err, decoded) => {
@@ -33,6 +31,7 @@ router.get('/favorites', authorize, (req, res, next) => {
     .innerJoin('books', 'books.id', 'favorites.book_id')
     .then((rows) => {
       const favorites = camelizeKeys(rows);
+
       res.send(favorites);
     })
     .catch((err) => {
@@ -44,9 +43,9 @@ router.post('/favorites', authorize, (req, res, next) => {
   const { bookId } = req.body;
   const favorite = { bookId, userId: req.token.userId };
 
-  if (!bookId)
+  if (!bookId) {
     return next(boom.create(400, 'Book id must not be blank'));
-
+  }
   knex('favorites')
     .insert(decamelizeKeys(favorite), '*')
     .then((rows) => {
@@ -62,12 +61,12 @@ router.delete('/favorites', authorize, (req, res, next) => {
   let favorite;
   const id = req.token.userId;
 
-  if (isNaN(id)) return next(boom.create(404, 'Not Found'));
+  if (isNaN(id)) { return next(boom.create(404, 'Not Found')); }
   knex('favorites')
     .where('id', id)
     .first()
     .then((row) => {
-      if (!row) throw boom.create(404, 'Not Found');
+      if (!row) { throw boom.create(404, 'Not Found'); }
 
       favorite = row;
 
